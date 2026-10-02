@@ -9,10 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Ibarra+Real+Nova:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
   <script>
-    // pick the theme before first paint: saved choice, else the system setting
+    // pick the theme before first paint: light unless the visitor chose dark
     try {
-      var l = localStorage.getItem("light");
-      if (l ? l === "off" : matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.dataset.theme = "dark";
+      if (localStorage.getItem("light") === "off") document.documentElement.dataset.theme = "dark";
     } catch (e) {}
   </script>
   <style>
