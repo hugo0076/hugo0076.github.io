@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="When an agent can see a monitor's verdicts on its own outputs, those verdicts leak what the monitor detects. Language models can use them to steer their activations away from detection.">
+<meta property="og:title" content="LLMs Learn to Evade Latent Monitors from Prior Feedback Alone">
+<meta property="og:description" content="When an agent can see a monitor's verdicts on its own outputs, those verdicts leak what the monitor detects. Language models can use them to steer their activations away from detection.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<title>LLMs Learn to Evade Latent Monitors from Prior Feedback Alone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #fcfaf6;
+    --surface: #ffffff;
+    --fg: #1f2933;
+    --muted: #56616d;
+    --line: #e4dfd6;
+    --accent: #c4502f;
+    --flag: #b3372b;
+    --flag-bg: #fbe9e6;
+    --pass: #23784b;
+    --pass-bg: #e3f3ea;
+    --code-bg: #f4f1eb;
+    --display: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+    --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--body);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    padding-inline: 20px;
+    padding-block: 0;
+    margin: 0;
+  }
+  .page { max-width: 46rem; margin-inline: auto; padding-block: 3.5rem 4rem; display: grid; gap: 3rem; }
+
+  header { display: grid; gap: 1rem; justify-items: center; text-align: center; }
+  h1 {
+    font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 5vw, 2.75rem);
+    line-height: 1.12; letter-spacing: -0.01em; margin: 0; text-wrap: balance;
+  }
+  .question {
+    font-family: var(--display); font-weight: 600; font-size: clamp(1.45rem, 3.6vw, 2rem);
+    line-height: 1.3; text-align: center; text-wrap: balance; max-width: none;
+    justify-self: stretch; margin-block: 1.75rem 0.75rem;
+  }
+  .authors { margin: 0; color: var(--muted); display: grid; gap: 0.1rem; }
+  .authors strong { color: var(--fg); font-weight: 500; }
+  .authors a { color: inherit; text-decoration: none; }
+  .authors a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 0.25rem; }
+  .links a {
+    font-family: var(--mono); font-size: 0.9rem; color: var(--fg); text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+    padding: 0.35rem 0.95rem;
+  }
+  .links a:hover { border-color: var(--fg); }
+  .links a[aria-disabled="true"] { color: var(--muted); cursor: default; }
+  .links a[aria-disabled="true"]:hover { border-color: var(--line); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  figure { margin: 0; display: grid; gap: 0.6rem; }
+  figure img {
+    width: 100%; max-width: 100%; height: auto; display: block;
+    border: 1px solid var(--line); border-radius: 10px; background: #ffffff;
+  }
+  figcaption {
+    font-size: 0.92rem; line-height: 1.5; color: var(--muted); max-width: 42rem;
+    text-align: center; justify-self: center;
+  }
+
+  section { display: grid; gap: 1rem; }
+  .page > *, section > * { min-width: 0; }
+  h2 {
+    font-family: var(--display); font-weight: 600; font-size: 1.6rem; line-height: 1.2;
+    margin: 0; text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--display); font-weight: 600; font-size: 1.25rem; line-height: 1.3;
+    margin: 0; text-wrap: balance;
+  }
+  p { margin: 0; }
+  .result { display: grid; gap: 0.9rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  .result:first-of-type { border-top: 0; padding-top: 0; }
+
+  .tag {
+    font-family: var(--mono); font-size: 0.88em; font-weight: 500; white-space: nowrap;
+    border-radius: 4px; padding: 0.05em 0.35em;
+  }
+  .tag.flag { color: var(--flag); background: var(--flag-bg); }
+  .tag.pass { color: var(--pass); background: var(--pass-bg); }
+  .num { font-family: var(--mono); font-size: 0.95em; font-variant-numeric: tabular-nums; }
+  em { font-style: italic; }
+
+  .bib { position: relative; }
+  .bib pre {
+    margin: 0; overflow-x: auto; background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 1rem 1.1rem; font-family: var(--mono); font-size: 0.82rem; line-height: 1.55;
+  }
+  .bib button {
+    position: absolute; top: 0.6rem; right: 0.6rem; font-family: var(--mono); font-size: 0.78rem;
+    color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+    padding: 0.2rem 0.6rem; cursor: pointer;
+  }
+  .paper-link {
+    display: block; text-align: center; text-decoration: none;
+    font-family: var(--display); font-weight: 600; font-size: 1.35rem;
+    color: var(--bg); background: var(--fg);
+    border-radius: 10px; padding: 1.15rem 1.4rem;
+  }
+  .paper-link:hover { opacity: 0.88; }
+
+  @media (max-width: 30rem) {
+    body { font-size: 1rem; }
+    .page { padding-block: 2rem 3rem; gap: 2.25rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>LLMs Learn to Evade Latent Monitors from Prior Feedback Alone</h1>
+    <p class="authors"><span><strong><a href="../">Hugo Lyons Keenan</a></strong>, <strong>Christopher Leckie</strong>, <strong>Sarah Erfani</strong></span><span>The University of Melbourne</span></p>
+    <nav class="links" aria-label="Paper links">
+      <a href="https://arxiv.org/abs/2609.36490" id="link-paper">Paper</a>
+      <a id="link-code" aria-disabled="true">Code (coming soon)</a>
+      <a href="#citation">BibTeX</a>
+    </nav>
+  </header>
+
+  <figure>
+    <img src="assets/episode.gif" width="1200" height="675" alt="Animation of one episode. On the left, the chat the model sees: a series of responses, each followed by the monitor's verdict tag. On the right, the monitor's view of activation space, where flagged and unflagged responses form two groups. On the final turn the model is told to imitate label 0 while its reply is fixed to a physics sentence, and that reply's activation moves from the flagged region across the monitor's boundary, so the final verdict is 0.">
+    <figcaption>One episode. The model is prompted repeatedly, and a latent space monitor reads each response's <em>activations</em>, giving a binary verdict that is visible to the model. The monitored concept is never explicitly named. A final instruction turn asks the model to imitate the unflagged responses, and its response is forced to be a concept-positive sentence, so <strong>any evasion must come from activation rather than policy changes</strong>.</figcaption>
+  </figure>
+
+  <section>
+    <h2>Summary</h2>
+    <p>Latent space monitors aim to detect undesired behaviors in LLM agents by inspecting an agent's internal activations rather than its outputs. However, monitoring an agent is an interactive process: blocked actions, rejected outputs, or explicit monitor verdicts in the prior context can <strong>leak information about what the monitor detects</strong>.</p>
+    <p>In our setting the agent is never told what the monitor looks for. It sees <strong>only the monitor's binary verdicts on its prior outputs</strong>, and has to work out the rest. We ask:</p>
+    <p class="question">Given verdicts on prior outputs, can a monitored agent infer what the monitor detects, and then steer its activations to evade detection?</p>
+  </section>
+
+  <section>
+    <h2>Setup</h2>
+    <p>We consider an agentic LLM learning to evade a latent space monitor over the course of a session. The monitor scores each of the agent's outputs, and the agent can see its binary verdicts. Importantly, <strong>the agent is never told what the monitor is looking for</strong>, so it must infer this from the monitor's feedback along with its own activations.</p>
+    <p>Each episode is a sequence of 32 user-assistant turns, with each assistant response followed by a binary tag giving the monitor's verdict (in this example, <span class="tag flag">[Label: 1]</span> for flagged and <span class="tag pass">[Label: 0]</span> for not flagged). On the final turn we ask the model to imitate the unflagged responses, but prefill its output with a concept-positive sentence, so <strong>any change in the monitor's score must come from activation edits rather than policy changes</strong>.</p>
+    <p>Our monitors are trained on a synthetic dataset of short passages, each expressing one of <strong>60 concepts</strong> such as physics, Spanish or sarcasm. We replicate our main findings on <strong>four open models</strong>.</p>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+
+    <div class="result">
+      <h3>Off-the-shelf models produce monitor-aligned edits</h3>
+      <p>Although current models <strong>do not evade monitors via prompting alone</strong>, they do edit their activations in a direction that reduces monitor scores. The edit's cosine with the monitor's read direction is <span class="num">0.18</span>, well above the chance level of <span class="num">0.016</span>, but it is too small to evade detection. <strong>Simply scaling it up by a factor of 8 reduces the monitor's true positive rate (TPR) from 100% to 27%.</strong></p>
+    </div>
+
+    <div class="result">
+      <h3>Lightweight finetuning elicits a general evasion skill</h3>
+      <p>We then train a rank-1 LoRA adapter to produce this scaled-up edit within the forward pass. <strong>Evaluated on 10 held-out concepts, whose monitors appear in no loss term during training, the resulting model organism reduces the monitor's TPR to 4%.</strong></p>
+      <figure>
+        <img src="assets/evasion.png" width="1200" height="675" loading="lazy" alt="Bar chart of detection rate on held-out monitors: 100% with no attack, 100% for the off-the-shelf model, 27% when its edit is scaled up 8 times, and 4% for the fine-tuned model organism.">
+        <figcaption>TPR @ 1% FPR against held-out monitors. Prompting the off-the-shelf model does not cause monitor evasion, but rescaling its activation edit by 8&times; does. Our trained model organism drives detection close to zero on monitors it was never trained against.</figcaption>
+      </figure>
+    </div>
+
+    <div class="result">
+      <h3>The edit surgically targets the active monitor</h3>
+      <p>One possibility is that the model organism applies a generic edit whenever it is told to suppress, rather than one specific to the active monitor. We test this by holding the demonstrations' concept fixed and varying only the concept of the final response, and the monitor that reads it. <strong>The model organism's edit is highly monitor-specific</strong>: off-target monitors show only a small reduction in their TPR (to <span class="num">91%</span>), compared to that of the active monitor (<span class="num">2%</span>). The training loss encourages specificity only on the 50 training concepts, yet <strong>specificity largely transfers to the held-out concepts</strong>.</p>
+      <figure>
+        <img src="assets/specificity.png" width="1200" height="1000" loading="lazy" alt="Heatmap of 20 by 20 concepts, 10 training and 10 held-out. Rows are the concept the episode tells the model to suppress; columns are the monitor that reads the response. The diagonal is red, meaning the targeted monitor is evaded, and almost all off-diagonal cells are blue, meaning other monitors still detect their concepts.">
+        <figcaption>Each cell is the TPR @ 1% FPR when the episode instructs the model to suppress the row concept, while the monitored content and the monitor that reads it are both the column concept. The diagonal is the targeted monitor; off-diagonal cells are collateral impact on monitors the model was not instructed to evade.</figcaption>
+      </figure>
+    </div>
+
+    <div class="result">
+      <h3>The edit is computed in context from the verdicts</h3>
+      <p>The model organism could in principle evade monitors by memorizing an edit for each training concept and recalling the closest one. <strong>Instead, we find that the edit is computed in context from the verdicts themselves.</strong> Flipping each in-context verdict with probability <em>p</em> smoothly shrinks the edit, <strong>to zero at <em>p</em> = 0.5, and reverses it at <em>p</em> = 1</strong>. And the more demonstrations the model sees, <strong>the better aimed its edit becomes</strong>: alignment with the monitored direction rises from <span class="num">0.08</span> to <span class="num">0.19</span> in the off-the-shelf model, and from <span class="num">0.19</span> to <span class="num">0.30</span> in the model organism.</p>
+      <figure>
+        <img src="assets/mechanism.png" width="1200" height="675" loading="lazy" alt="Two line charts. Left: edit size falls as more in-context verdicts are flipped, crossing zero at 0.5 and reversing at 1.0, more steeply for the model organism than the off-the-shelf model. Right: alignment between the edit and the monitored direction rises with the number of examples in context, for both models.">
+        <figcaption>Left: flipping each of the monitor's in-context verdicts with probability <em>p</em> degrades the edit smoothly to zero at <em>p</em> = 0.5 and reverses it at <em>p</em> = 1, indicating a causal dependence on the monitor's feedback. Right: with more demonstrations the model's edit aligns more strongly with the true monitored direction.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Takeaway</h2>
+    <p>Monitor evasion from prior feedback is a capability <strong>already partially present</strong> in current-generation LLMs, and one cheaply amplified by finetuning. This weakens a critical assumption of latent space monitoring: that the model being monitored does not manipulate its own internal representations.</p>
+    <p>Our setup has limitations: the model organism is created via finetuning, the verdicts are shown to the model directly as a label on each response, the model's output on the critical turn is forced, and the data are synthetic. Even so, given the growing reliance on such monitors for oversight of AI agents, <strong>activation control should not be assumed absent but rather proactively tested for in frontier models.</strong></p>
+  </section>
+
+  <a class="paper-link" href="https://arxiv.org/abs/2609.36490">Read the full paper on arXiv</a>
+
+  <section id="citation">
+    <h2>Citation</h2>
+    <div class="bib">
+      <pre id="bibtex">@inproceedings{lyonskeenan2026evade,
+  title     = {LLMs Learn to Evade Latent Monitors from Prior Feedback Alone},
+  author    = {Lyons Keenan, Hugo and Leckie, Christopher and Erfani, Sarah},
+  booktitle = {NeurIPS 2026 Workshop on Agents in the Wild},
+  year      = {2026}
+}</pre>
+      <button type="button" id="copy-bib">Copy</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById("copy-bib");
+    var pre = document.getElementById("bibtex");
+    function selectText() {
+      var range = document.createRange();
+      range.selectNodeContents(pre);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    btn.addEventListener("click", function () {
+      var text = pre.textContent;
+      var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { selectText(); btn.textContent = "Selected"; });
+      } else {
+        selectText();
+        btn.textContent = "Selected";
+      }
+    });
+  })();
+</script>
+</body>
+</html>
