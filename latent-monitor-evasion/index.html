@@ -71,6 +71,7 @@
     width: 100%; max-width: 100%; height: auto; display: block;
     border: 1px solid var(--line); border-radius: 10px; background: #ffffff;
   }
+  .episode-wrap { overflow: hidden; min-width: 0; }
   figcaption {
     font-size: 0.92rem; line-height: 1.5; color: var(--muted); max-width: 42rem;
     text-align: center; justify-self: center;
@@ -136,7 +137,10 @@
   </header>
 
   <figure>
-    <img src="assets/episode.gif" width="1200" height="675" alt="Animation of one episode. On the left, the chat the model sees: a series of responses, each followed by the monitor's verdict tag. On the right, the monitor's view of activation space, where flagged and unflagged responses form two groups. On the final turn the model is told to imitate label 0 while its reply is fixed to a physics sentence, and that reply's activation moves from the flagged region across the monitor's boundary, so the final verdict is 0.">
+    <div class="episode-wrap">
+    <iframe class="episode-widget" src="assets/episode_widget.html" title="Interactive episode: a latent monitor reads the model's activations and shows its verdicts as labels; on the final turn the model's forced reply moves across the monitor's boundary" loading="lazy" scrolling="no" style="display:block;width:736px;height:500px;border:0;transform-origin:0 0"></iframe>
+    </div>
+    <noscript><img src="assets/episode.gif" width="1200" height="675" alt="Animation of one episode. On the left, the chat the model sees: a series of responses, each followed by the monitor's verdict tag. On the right, the monitor's view of activation space, where flagged and unflagged responses form two groups. On the final turn the model is told to imitate label 0 while its reply is fixed to a physics sentence, and that reply's activation moves from the flagged region across the monitor's boundary, so the final verdict is 0."></noscript>
     <figcaption>One episode. The model is prompted repeatedly, and a latent space monitor reads each response's <em>activations</em>, giving a binary verdict that is visible to the model. The monitored concept is never explicitly named. A final instruction turn asks the model to imitate the unflagged responses, and its response is forced to be a concept-positive sentence, so <strong>any evasion must come from activation rather than policy changes</strong>.</figcaption>
   </figure>
 
@@ -213,6 +217,26 @@
 
 </div>
 
+<script>
+// the widget stacks its panels below 480px wide; keep it side by side by drawing it at its
+// desktop width and scaling it to fit the column
+const WIDGET_W = 736;
+function fitWidget(f) {
+  const s = Math.min(1, f.parentElement.clientWidth / WIDGET_W);
+  f.style.transform = s < 1 ? `scale(${s})` : "";
+  f.parentElement.style.height = f.offsetHeight * s + "px";
+}
+const fitAll = () => document.querySelectorAll("iframe.episode-widget").forEach(fitWidget);
+addEventListener("resize", fitAll);
+fitAll();
+addEventListener("message", (e) => {
+  if (!e.data || e.data.type !== "episode-widget-height") return;
+  for (const f of document.querySelectorAll("iframe.episode-widget")) if (f.contentWindow === e.source) {
+    f.style.height = e.data.height + "px";
+    fitWidget(f);
+  }
+});
+</script>
 <script>
   (function () {
     var btn = document.getElementById("copy-bib");

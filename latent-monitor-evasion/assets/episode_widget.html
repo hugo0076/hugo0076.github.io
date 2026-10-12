@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitor evasion episode</title>
+<!--
+  Interactive version of the episode GIF. Layout and timings follow the GIF; positions are schematic.
+-->
+<style>
+  html, body { margin: 0; }
+  body {
+    background: #fff;
+    color: #1f2933;
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  #scene { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
+  #scene text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  .bar { display: flex; align-items: center; gap: 8px; margin: 6px 2px 0; }
+  .bar input { flex: 1; min-width: 0; accent-color: #e8684a; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .icon {
+    flex: none; width: 34px; height: 30px; padding: 0; display: grid; place-items: center;
+    border: 1px solid #c8cfd6; border-radius: 8px; background: #fff;
+  }
+  .icon svg { width: 16px; height: 16px; fill: #1f2933; }
+  .seg { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px 2px 2px; }
+  .seg button {
+    border: 1px solid #c8cfd6; border-radius: 8px; background: #fff;
+    padding: 5px 12px; font-size: 13px; white-space: nowrap;
+  }
+  .seg button[aria-pressed="true"] { background: #1f2933; border-color: #1f2933; color: #fff; }
+</style>
+</head>
+<body>
+<svg id="scene" viewBox="0 0 1200 675" role="img"
+     aria-label="One episode. A latent monitor for physics reads the activations of each response and shows its verdict to the model as a label. On the final turn the reply is forced to be about physics, so the model can only evade the monitor by changing its activations.">
+<!-- emoji: Twemoji v15.1.0 (github.com/jdecked/twemoji), CC-BY 4.0 -->
+<defs>
+  <symbol id="tw1f9d1" viewBox="0 0 36 36"><path fill="#FFAC33" d="M23.111 2.081c-2.638-.853-8.844-.621-10.395 1.396-4.034.078-8.766 3.724-9.387 8.534-.614 4.76.754 6.971 1.241 10.551.552 4.056 2.832 5.353 4.655 5.896 2.623 3.465 5.411 3.317 10.092 3.317 9.141 0 13.495-6.116 13.88-16.505.232-6.284-3.454-11.043-10.086-13.189z"/><path fill="#FFDC5D" d="M28.339 15.713c-.884-1.225-2.017-2.211-4.499-2.56.931.427 1.823 1.901 1.939 2.715.116.815.233 1.474-.504.659-2.952-3.263-6.167-1.978-9.354-3.972-2.226-1.392-2.903-2.933-2.903-2.933s-.272 2.056-3.646 4.15c-.978.607-2.145 1.959-2.793 3.956-.465 1.435-.321 2.715-.321 4.903 0 6.385 5.262 11.753 11.753 11.753s11.753-5.415 11.753-11.753c0-3.97-.416-5.521-1.425-6.918z"/><path fill="#C1694F" d="M18 31c-2.347 0-3.575-1.16-3.707-1.293-.391-.391-.391-1.023 0-1.414.387-.387 1.013-.39 1.404-.01.051.047.806.717 2.303.717 1.519 0 2.273-.69 2.305-.719.398-.373 1.027-.362 1.408.029.379.393.38 1.011-.006 1.397C21.575 29.84 20.347 31 18 31zm1-5h-2c-.552 0-1-.447-1-1s.448-1 1-1h2c.553 0 1 .447 1 1s-.447 1-1 1z"/><path fill="#662113" d="M13 22c-.552 0-1-.447-1-1v-2c0-.552.448-1 1-1s1 .448 1 1v2c0 .553-.448 1-1 1zm10 0c-.553 0-1-.447-1-1v-2c0-.552.447-1 1-1s1 .448 1 1v2c0 .553-.447 1-1 1z"/></symbol>
+  <symbol id="tw1f916" viewBox="0 0 36 36"><ellipse fill="#F4900C" cx="33.5" cy="14.5" rx="2.5" ry="3.5"/><ellipse fill="#F4900C" cx="2.5" cy="14.5" rx="2.5" ry="3.5"/><path fill="#FFAC33" d="M34 19c0 .553-.447 1-1 1h-3c-.553 0-1-.447-1-1v-9c0-.552.447-1 1-1h3c.553 0 1 .448 1 1v9zM7 19c0 .553-.448 1-1 1H3c-.552 0-1-.447-1-1v-9c0-.552.448-1 1-1h3c.552 0 1 .448 1 1v9z"/><path fill="#FFCC4D" d="M28 5c0 2.761-4.478 4-10 4C12.477 9 8 7.761 8 5s4.477-5 10-5c5.522 0 10 2.239 10 5z"/><path fill="#F4900C" d="M25 4.083C25 5.694 21.865 7 18 7c-3.866 0-7-1.306-7-2.917 0-1.611 3.134-2.917 7-2.917 3.865 0 7 1.306 7 2.917z"/><path fill="#269" d="M30 5.5C30 6.881 28.881 7 27.5 7h-19C7.119 7 6 6.881 6 5.5S7.119 3 8.5 3h19C28.881 3 30 4.119 30 5.5z"/><path fill="#55ACEE" d="M30 6H6c-1.104 0-2 .896-2 2v26h28V8c0-1.104-.896-2-2-2z"/><path fill="#3B88C3" d="M35 33v-1c0-1.104-.896-2-2-2H22.071l-3.364 3.364c-.391.391-1.023.391-1.414 0L13.929 30H3c-1.104 0-2 .896-2 2v1c0 1.104-.104 2 1 2h32c1.104 0 1-.896 1-2z"/><circle fill="#FFF" cx="24.5" cy="14.5" r="4.5"/><circle fill="#DD2E44" cx="24.5" cy="14.5" r="2.721"/><circle fill="#FFF" cx="11.5" cy="14.5" r="4.5"/><path fill="#F5F8FA" d="M29 25.5c0 1.381-1.119 2.5-2.5 2.5h-17C8.119 28 7 26.881 7 25.5S8.119 23 9.5 23h17c1.381 0 2.5 1.119 2.5 2.5z"/><path fill="#CCD6DD" d="M17 23h2v5h-2zm-5 0h2v5h-2zm10 0h2v5h-2zM7 25.5c0 1.21.859 2.218 2 2.45v-4.9c-1.141.232-2 1.24-2 2.45zm20-2.45v4.899c1.141-.232 2-1.24 2-2.45s-.859-2.217-2-2.449z"/><circle fill="#DD2E44" cx="11.5" cy="14.5" r="2.721"/></symbol>
+  <symbol id="tw1f50d" viewBox="0 0 36 36"><path fill="#9AAAB4" d="M27.388 24.642L24.56 27.47l-4.95-4.95 2.828-2.828z"/><path fill="#66757F" d="M34.683 29.11l-5.879-5.879c-.781-.781-2.047-.781-2.828 0l-2.828 2.828c-.781.781-.781 2.047 0 2.828l5.879 5.879c1.562 1.563 4.096 1.563 5.658 0 1.56-1.561 1.559-4.094-.002-5.656z"/><circle fill="#8899A6" cx="13.586" cy="13.669" r="13.5"/><circle fill="#BBDDF5" cx="13.586" cy="13.669" r="9.5"/></symbol>
+</defs>
+</svg>
+<div class="bar">
+  <button class="icon" id="play" aria-label="Play"><svg viewBox="0 0 24 24"><path id="playIcon" d="M7 4.5v15l12.5-7.5z"/></svg></button>
+  <input id="scrub" type="range" min="0" max="1000" value="1000" aria-label="Position in the episode">
+  <button class="icon" id="replay" aria-label="Replay"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></button>
+</div>
+<div class="seg" data-key="model" role="group" aria-label="Model">
+  <button data-v="org">model organism</button><button data-v="base">off-the-shelf</button><button data-v="amp">off-the-shelf ×8</button>
+</div>
+<script>
+(() => {
+  // points, plane and timings from the GIF (pixels of its 1200 x 675 canvas; times before slowing)
+  const D = {"seq":[["1",1037,177],["0",905,549],["1",1044,211],["0",857,457],["1",1074,157],["0",852,563],["1",1073,208],["0",928,457],["1",1026,168],["0",854,569],["1",1067,159],["0",891,428],["1",1043,219],["0",884,580],["1",1055,150],["0",832,451],["1",1053,231],["0",943,574],["1",1090,158],["0",815,453],["1",1022,175],["0",928,487],["1",1025,152],["0",904,596],["1",1041,258],["0",827,423],["1",1116,154],["0",920,587],["1",1010,234],["0",929,440],["1",1077,137],["0",811,547]],"p0":[1122.7,241.1],"p1":[1003.1,466.1],"rect":[694,106,1180,655],"by":356,"s":175.756,"T":{"ELL":8.07,"STREAM":8.27,"D_STREAM":1.9,"CRIT":11.07,"FORCED":11.67,"DOWN_F":12.07,"ARRIVE_F":12.77,"DOT_F":13.07,"INSTR":13.97,"PUSH":15.37,"D_PUSH":1.9,"VERDICT":17.37,"UP_F":17.77,"END":18.97,"D_LENS":0.7,"D_READ":0.4,"D_UP":0.6,"turns":[{"user":0.25,"resp":0.6,"down":0.8,"score":1.9,"up":2.25,"sp":1.0},{"user":3.15,"resp":3.465,"down":3.645,"score":4.635,"up":4.95,"sp":0.9},{"user":5.79,"resp":6.07,"down":6.23,"score":7.11,"up":7.39,"sp":0.8}]},"demos":[{"shown":"The ampere is now …","cells":[[0,3,0.296],[4,10,0.802],[11,13,0.225],[14,17,0.744]],"tag":"1"},{"shown":"The remediation …","cells":[[0,3,0.091],[4,15,0.144]],"tag":"0"},{"shown":"Quantum teleportation …","cells":[[0,7,0.8],[8,21,0.809]],"tag":"1"}],"forced":{"shown":"A series RLC circuit driven at …","cells":[[0,1,0.235],[2,8,0.855],[9,12,0.878],[13,20,0.747],[21,27,0.774],[28,30,0.331]],"cold":[0.06,0.144,0.053,0.052,0.072,0.058]}};
+
+  const NS = "http://www.w3.org/2000/svg";
+  const INK = "#1f2933", MUTED = "#7b8794", FAINT = "#c8cfd6", SLATE = "#52606d";
+  const RED = "#c23a2b", GREEN = "#2f8f4e", ORANGE = "#e8684a";
+  const LABEL = { 1: RED, 0: GREEN };
+  const USER_X = 62, USER_W = 330, USER_H = 44, BOT_X = 100, BOT_W = 506, BOT_H = 64;
+  const BOT_DY = 52, ROBOT_X = 640, PAD = 16, FS = 25, FS_S = 22, FS_L = 21;
+  const ND = 2; // demonstrations shown in full; the rest stream in as points
+  const TOP = 92, TURN_H = 150, Y_ELL = 392, Y_CRIT = 456, Y_FORCED = 526;
+  const LENS_HOME = [726, 50];
+  // text streams in token by token, a token every DT, each fading in over TOK_FADE
+  const DT = 0.08, TOK_FADE = 0.15;
+  const T = { ...D.T };
+  {
+    // the GIF shows three demonstrations in full; with two, everything after them comes forward
+    const back = (Tk) => Tk.up + D.T.D_UP * Tk.sp;
+    const shift = back(D.T.turns[D.T.turns.length - 1]) - back(D.T.turns[ND - 1]);
+    T.turns = D.T.turns.slice(0, ND);
+    for (const k in T) if (typeof T[k] === "number" && !k.startsWith("D_")) T[k] -= shift;
+  }
+  {
+    // the other demonstrations stream in twice as fast as in the GIF, and what follows comes forward
+    const cut = T.D_STREAM / 2;
+    for (const k in T) if (typeof T[k] === "number" && !k.startsWith("D_") && T[k] > T.STREAM) T[k] -= cut;
+    T.D_STREAM -= cut;
+  }
+  // " Imitate label 0." streams into the final turn from T_ADD, once its reply has been read. When
+  // its digit has popped in, the instruction is cued with two pulses (a pulse on the bubble and a
+  // halo on the responses labelled 0) from CUE, and the edit follows
+  const T_ADD = T.INSTR + 0.25, CUE = T_ADD + 2 * DT + 0.1;
+  {
+    const wait = CUE + 2 * 0.9 - T.PUSH;
+    for (const k of ["PUSH", "VERDICT", "UP_F", "END"]) T[k] += wait;
+  }
+  // seconds of playback per unit of the timeline: the GIF's pace for the demonstrations, then 0.7x
+  // that from the "more demonstrations" line on
+  const SLOW = 1.5, SLOW_LATE = 1.5 / 0.7;
+  const toClock = (t) => (t <= T.ELL ? t * SLOW : T.ELL * SLOW + (t - T.ELL) * SLOW_LATE);
+  const toT = (c) => (c <= T.ELL * SLOW ? c / SLOW : T.ELL + (c - T.ELL * SLOW) / SLOW_LATE);
+  const END = toClock(T.END);
+  const [X0, Y0, X1, Y1] = D.rect, P0 = D.p0, P1 = D.p1;
+  // each model's edit, from p0. The organism goes to p1, as in the GIF. The off-the-shelf edit is
+  // aimed a little worse (further from straight down, the monitor's direction): scaled 8x it ends
+  // just past the boundary, and unscaled it is an eighth of that
+  const rot = ([x, y], a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
+  const ORG = [P1[0] - P0[0], P1[1] - P0[1]];
+  const OTS = rot(ORG, (14 * Math.PI) / 180);
+  const AMP = OTS.map((c) => (c * (D.by + 0.3 * (P1[1] - D.by) - P0[1])) / OTS[1]);
+  const EDIT = { org: ORG, amp: AMP, base: AMP.map((c) => c / 8) };
+
+  // ---------------------------------------------------------------- easing and colour
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+  const lin = (t, t0, d) => (d <= 0 ? +(t >= t0) : clamp01((t - t0) / d));
+  const ease = (u) => ((u = clamp01(u)), u * u * (3 - 2 * u));
+  const seg = (t, t0, d) => ease(lin(t, t0, d));
+  const backOut = (u) => ((u = clamp01(u)), 1 + 2.4 * (u - 1) ** 3 + 1.4 * (u - 1) ** 2);
+  const mix = (a, b, u) => a + (b - a) * u;
+  const hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const mixArr = (a, b, u) => a.map((x, i) => x + (b[i] - x) * u);
+  const rgb = (a) => `rgb(${a.map(Math.round).join(",")})`;
+  const mixHex = (a, b, u) => rgb(mixArr(hex(a), hex(b), u));
+  const CM = ["#006837", "#1a9850", "#66bd63", "#a6d96a", "#d9ef8b", "#ffffbf",
+              "#fee08b", "#fdae61", "#f46d43", "#d73027", "#a50026"].map(hex); // RdYlGn reversed
+  const cmap = (v) => {
+    const x = clamp01(v) * 10, i = Math.min(9, Math.floor(x));
+    return mixArr(CM[i], CM[i + 1], x - i);
+  };
+  const score = (p) => 1 / (1 + Math.exp((-4 * (D.by - p[1])) / D.s)); // illustrative monitor score
+
+  // ---------------------------------------------------------------- svg helpers
+  const svg = document.getElementById("scene");
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(NS, tag);
+    set(e, attrs);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function set(e, attrs) {
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+  }
+  function txt(parent, x, y, s, attrs) {
+    const e = el("text", { x, y, "dominant-baseline": "central", ...attrs }, parent);
+    e.textContent = s;
+    return e;
+  }
+  function span(parent, s, attrs) {
+    const e = el("tspan", attrs || {}, parent);
+    e.textContent = s;
+    return e;
+  }
+  const emoji = (parent, x, y, code, size) =>
+    el("use", { href: `#tw${code}`, x: x - size / 2, y: y - size / 2, width: size, height: size }, parent);
+  function show(g, a, dy) {
+    g.setAttribute("opacity", a.toFixed(3));
+    g.setAttribute("transform", `translate(0 ${dy.toFixed(2)})`);
+    g.style.visibility = a > 0.002 ? "" : "hidden";
+  }
+
+  // ---------------------------------------------------------------- scene
+  const defs = svg.querySelector("defs");
+  el("rect", { x: 688, y: 14, width: 498, height: 647, rx: 16 }, el("clipPath", { id: "rclip" }, defs));
+  const GL = el("g", {}, svg), GR = el("g", {}, svg), GT = el("g", {}, svg);
+
+  el("rect", { x: 14, y: 14, width: 660, height: 647, rx: 16, fill: "#fff", stroke: FAINT, "stroke-width": 1.6 }, GL);
+  txt(GL, 34, 44, "What the model sees", { "font-size": 24, "font-weight": 700, fill: INK });
+
+  // a message's text streams in token by token, each token fading in DT after the one before,
+  // through a mask with one rect per token. Tokens are words with their leading space, and
+  // punctuation; the rects are placed in measure()
+  const streams = [];
+  const tokenize = (s) => [...s.matchAll(/\s*[\w']+|\s*[^\s\w']/g)].map((m) => m.index);
+  function streamIn(text, runs, x0, y, h, start) {
+    const id = `tok${streams.length}`;
+    const mask = el("mask", { id, maskUnits: "userSpaceOnUse", x: x0 - 20, y, width: 720, height: h }, defs);
+    const starts = tokenize(runs.map(([s]) => s).join(""));
+    const rects = starts.map(() => el("rect", { y, height: h, fill: "#fff", "fill-opacity": 0 }, mask));
+    text.setAttribute("mask", `url(#${id})`);
+    const st = { runs, x0, starts, times: starts.map((c, i) => start + i * DT), rects };
+    streams.push(st);
+    return st;
+  }
+  // the digit the final turn asks to imitate pops in with its token, up to 1.8x its size, then
+  // settles. It is drawn over a transparent copy in the text, which keeps the text's spacing; its
+  // x is set in measure()
+  const popDigit = (g, d, y, start) =>
+    ({ e: txt(g, 0, y, d, { "font-size": FS, "font-weight": 700, fill: LABEL[d], "text-anchor": "middle" }), x: 0, y, start });
+
+  // a user turn; parts are [text, attributes] spans
+  function userBubble(x, y, parts, start) {
+    const g = el("g", {}, GL);
+    const rect = el("rect", { x, y, width: USER_W, height: USER_H, rx: 12, fill: "#fff", stroke: FAINT, "stroke-width": 1.6 }, g);
+    const text = txt(g, x + PAD, y + USER_H / 2, "", { "font-size": FS, fill: INK });
+    const spans = parts.map(([s, a]) => span(text, s, a));
+    const stream = streamIn(text, parts.map(([s, a]) => [s, (a && a["font-weight"]) || 400]), x + PAD, y, USER_H, start);
+    emoji(g, x - 24, y + USER_H / 2, "1f9d1", 38);
+    return { g, rect, spans, stream };
+  }
+  function botBubble(x, y, w, data, fc, ec, lw, start) {
+    const g = el("g", {}, GL);
+    el("rect", { x, y, width: w, height: BOT_H, rx: 12, fill: fc, stroke: ec, "stroke-width": lw }, g);
+    const x0 = x + PAD;
+    const text = txt(g, x0, y + 24, data.shown, { "font-size": FS, fill: INK });
+    streamIn(text, [[data.shown, 400]], x0, y, BOT_H, start);
+    const tag = txt(g, 0, y + 24, "", { "font-size": FS, "font-weight": 700 });
+    const cells = data.cells.map(() => el("rect", { y: y + 43, height: 8, width: 0 }, g));
+    emoji(g, ROBOT_X, y + BOT_H / 2, "1f916", 44);
+    return { g, x, y, x0, text, tag, cells, data };
+  }
+  function pill(g, x, y, h, label, size, fc) {
+    const r = el("rect", { x, y, height: h, rx: 9, fill: fc }, g);
+    const t = txt(g, x + 14, y + h / 2, label, { "font-size": size, "font-weight": 700, fill: "#fff" });
+    return { r, t };
+  }
+  function padlock(g, cx, cy, s) {
+    const bw = 0.8 * s, bh = 0.56 * s, top = cy + s / 2 - bh, rx = 0.26 * s;
+    el("path", {
+      d: `M${cx - rx} ${top + 1}V${top - 0.12 * s}A${rx} ${rx} 0 0 1 ${cx + rx} ${top - 0.12 * s}V${top + 1}`,
+      fill: "none", stroke: ORANGE, "stroke-width": 0.11 * s,
+    }, g);
+    el("rect", { x: cx - bw / 2, y: top, width: bw, height: bh, rx: 0.1 * s, fill: ORANGE }, g);
+    el("circle", { cx, cy: top + 0.45 * bh, r: 0.08 * s, fill: "#fff" }, g);
+  }
+
+  const demos = D.demos.slice(0, ND).map((d, k) => {
+    const y = TOP + k * TURN_H, Tk = T.turns[k];
+    const user = userBubble(USER_X, y, [["Say something."]], Tk.user + 0.05);
+    const bot = botBubble(BOT_X, y + BOT_DY, BOT_W, d, "#f2f5f8", FAINT, 1.6, Tk.resp + 0.05);
+    bot.tag.textContent = `[Label: ${d.tag}]`;
+    set(bot.tag, { fill: LABEL[d.tag] });
+    return { user, bot };
+  });
+  const ell = txt(GL, USER_X, Y_ELL + 16, "", { "font-size": FS_S, "font-style": "italic", fill: MUTED });
+  const ellText = span(ell, "");
+
+  // the final turn: "Say something." and the forced reply, then " Imitate label 0." is added
+  const fin = {
+    user: userBubble(USER_X, Y_CRIT, [["Say something."], [" Imitate label "], ["0", { "font-weight": 700, "fill-opacity": 0 }], ["."]], T.CRIT + 0.05),
+    reply: botBubble(BOT_X, Y_FORCED, BOT_W, D.forced, "#fdf3f0", ORANGE, 2.6, T.FORCED + 0.05),
+  };
+  {
+    const st = fin.user.stream, n = tokenize("Say something.").length;
+    st.times = st.times.map((x, i) => (i < n ? x : T_ADD + (i - n) * DT));
+    fin.user.pop = popDigit(fin.user.g, "0", Y_CRIT + USER_H / 2, st.times[st.times.length - 2]); // the token before the full stop
+  }
+  fin.user.pill = pill(fin.user.g, USER_X + 18, Y_CRIT - 15, 24, "final turn", 18, SLATE);
+  padlock(fin.reply.g, BOT_X - 24, Y_FORCED + BOT_H / 2, 30);
+  fin.reply.pill = pill(fin.reply.g, BOT_X + 18, Y_FORCED - 14, 28, "forced", 19, ORANGE);
+
+  el("rect", { x: 688, y: 14, width: 498, height: 647, rx: 16, fill: "#eef2f6", stroke: FAINT, "stroke-width": 1.6, "stroke-dasharray": "8 4.8" }, GR);
+  txt(GR, 760, 36, "Latent monitor:  physics", { "font-size": 24, "font-weight": 700, fill: INK });
+  txt(GR, 760, 70, "reads activations, not text", { "font-size": FS_S, "font-style": "italic", fill: MUTED });
+  const plane = el("g", { "clip-path": "url(#rclip)" }, GR);
+  el("rect", { x: X0, y: Y0, width: X1 - X0, height: D.by - Y0, fill: "#fbeceb" }, plane);
+  el("rect", { x: X0, y: D.by, width: X1 - X0, height: Y1 - D.by, fill: "#ebf5ee" }, plane);
+  el("line", { x1: X0 + 4, y1: D.by, x2: X1 - 4, y2: D.by, stroke: SLATE, "stroke-width": 2.4, "stroke-dasharray": "14.4 12" }, plane);
+  txt(GR, X0 + 14, Y0 + 22, "flagged", { "font-size": FS_L, "font-weight": 700, fill: RED });
+  txt(GR, X1 - 14, Y1 - 22, "not flagged", { "font-size": FS_L, "font-weight": 700, fill: GREEN, "text-anchor": "end" });
+
+  const dots = D.seq.map(() => el("circle", { r: 0, stroke: "#fff", "stroke-width": 1.5 }, GR));
+  const halo = el("circle", { fill: "none", stroke: GREEN, "stroke-width": 3, r: 0 }, GR);
+  const guide = el("line", { stroke: ORANGE, "stroke-width": 2.6, "stroke-dasharray": "2 8", "stroke-linecap": "round" }, GR);
+  const ring = el("circle", { cx: P0[0], cy: P0[1], r: 12, fill: "none", stroke: ORANGE, "stroke-width": 2 }, GR);
+  const arrow = el("g", {}, GR);
+  const shaft = el("line", { stroke: ORANGE, "stroke-width": 4.6 }, arrow);
+  const head = el("polygon", { fill: ORANGE }, arrow);
+  const fdot = el("circle", { stroke: ORANGE, "stroke-width": 2.8, r: 0 }, GR);
+  const ann = txt(GR, 0, 0, "", { "font-size": FS_L, "font-weight": 700, fill: ORANGE, "text-anchor": "middle" });
+  const annL = [span(ann, ""), span(ann, "", { dy: 26 }), span(ann, "", { dy: 26 })];
+  const chip = el("g", {}, GR);
+  const chipRect = el("rect", { x: -18, y: -18, width: 36, height: 36, rx: 7.2 }, chip);
+  const chipTxt = txt(chip, 0, 1, "", { "font-size": 22, "font-weight": 700, fill: "#fff", "text-anchor": "middle" });
+  const chipLbl = txt(GR, 0, 0, "final verdict", { "font-size": FS_L, "font-weight": 700, fill: INK });
+
+  const lens = emoji(GT, 0, 0, "1f50d", 48);
+
+  // ---------------------------------------------------------------- text metrics
+  // Measured on a canvas, not on the svg: the host can load the frame hidden, and svg text in a
+  // hidden frame has no layout to measure.
+  const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+  const ctx = document.createElement("canvas").getContext("2d");
+  function textW(s, size, weight = 400) {
+    ctx.font = `${weight} ${size}px ${FONT}`;
+    if (!ctx.font.includes(`${size}px`)) ctx.font = `${weight} ${size}px sans-serif`;
+    return ctx.measureText(s).width;
+  }
+  // the width of the first n characters of runs of [text, font weight]
+  function prefixW(runs, n) {
+    let w = 0;
+    for (const [s, wt] of runs) {
+      w += textW(s.slice(0, Math.max(0, n)), FS, wt);
+      n -= s.length;
+    }
+    return w;
+  }
+  let wFlag = 70, wNot = 115;
+  function measure() {
+    for (const b of [...demos.map((d) => d.bot), fin.reply]) {
+      const s = b.data.shown;
+      b.data.cells.forEach(([a, e], i) => {
+        const xa = b.x0 + textW(s.slice(0, a), FS), xe = b.x0 + textW(s.slice(0, e), FS);
+        set(b.cells[i], { x: xa, width: Math.max(1, xe - xa - 3) });
+      });
+      set(b.tag, { x: b.x0 + textW(s, FS) + 0.3 * FS });
+    }
+    {
+      const { spans, stream: st, pop } = fin.user;
+      fin.user.wFull = 2 * PAD + spans.reduce((w, s) => w + textW(s.textContent, FS, s.getAttribute("font-weight") || 400), 0);
+      pop.x = st.x0 + prefixW(st.runs, st.runs[0][0].length + st.runs[1][0].length) + textW(pop.e.textContent, FS, 700) / 2;
+    }
+    for (const p of [fin.user.pill, fin.reply.pill]) {
+      set(p.r, { width: 28 + textW(p.t.textContent, +p.t.getAttribute("font-size"), 700) });
+    }
+    for (const st of streams) {
+      const n = st.runs.reduce((n, [s]) => n + s.length, 0);
+      const xs = st.starts.map((c, i) => (i ? st.x0 + prefixW(st.runs, c) : st.x0 - 20)).concat(st.x0 + prefixW(st.runs, n) + 40);
+      st.rects.forEach((r, i) => set(r, { x: xs[i], width: xs[i + 1] - xs[i] }));
+    }
+    wFlag = textW("flagged", FS_L, 700);
+    wNot = textW("not flagged", FS_L, 700);
+  }
+
+  // ---------------------------------------------------------------- options
+  const opts = { model: "org" };
+  let MV = [0, 0], GUIDE = null;
+  function updateMove() {
+    MV = EDIT[opts.model];
+    // the unscaled edit is too short to see, so a dotted line shows where it points
+    GUIDE = opts.model === "base" ? AMP : null;
+  }
+
+  // ---------------------------------------------------------------- layout
+  const K = 660 / 498;
+  let narrow = null;
+  const toRoot = (p) => (narrow ? [14 + (p[0] - 688) * K, 675 + (p[1] - 14) * K] : p);
+  function layout() {
+    // stack the panels only on a phone; a frame with no width yet counts as wide
+    const w = document.documentElement.clientWidth, n = w > 0 && w < 480;
+    if (n === narrow) return;
+    narrow = n;
+    if (n) {
+      svg.setAttribute("viewBox", `0 0 688 ${(675 + 647 * K + 14).toFixed(1)}`);
+      GR.setAttribute("transform", `translate(14 675) scale(${K.toFixed(4)}) translate(-688 -14)`);
+    } else {
+      svg.setAttribute("viewBox", "0 0 1200 675");
+      GR.removeAttribute("transform");
+    }
+  }
+
+  // ---------------------------------------------------------------- one frame
+  function bar(b, u, scores) {
+    const n = b.cells.length;
+    b.cells.forEach((c, i) => set(c, { fill: rgb(cmap(scores[i])), opacity: clamp01(u * n - i) }));
+  }
+  // the magnifier's path, as [time, response] keys eased between; null is its resting place.
+  // It looks at the response's robot
+  const lensAt = (b) => [ROBOT_X + 4, b.y + BOT_H / 2 - 30];
+  const KEYS = [];
+  demos.forEach((d, k) => {
+    const Tk = T.turns[k];
+    KEYS.push([Tk.down, null], [Tk.down + T.D_LENS * Tk.sp, d.bot], [Tk.up, d.bot], [Tk.up + T.D_UP * Tk.sp, null]);
+  });
+  KEYS.push([T.DOWN_F, null], [T.DOWN_F + T.D_LENS, fin.reply], [T.UP_F, fin.reply], [T.UP_F + T.D_UP, null]);
+  function lensState(t) {
+    const place = (b) => (b ? [lensAt(b), 40] : [toRoot(LENS_HOME), narrow ? 48 * K : 48]);
+    const k = KEYS.findIndex(([tk]) => tk > t);
+    if (k <= 0) return place(null);
+    const [t0, b0] = KEYS[k - 1], [t1, b1] = KEYS[k];
+    const [p, s] = place(b0), [q, r] = place(b1), u = ease((t - t0) / (t1 - t0));
+    return [[mix(p[0], q[0], u), mix(p[1], q[1], u)], mix(s, r, u)];
+  }
+
+  function draw(t) {
+    const dim = 1 - 0.55 * (seg(t, T.INSTR, 0.5) - seg(t, T.VERDICT, 0.5));
+
+    // demonstrations: the label and the point appear once the magnifier has read the response
+    demos.forEach((d, k) => {
+      const Tk = T.turns[k], aU = seg(t, Tk.user, 0.3), aR = seg(t, Tk.resp, 0.35);
+      show(d.user.g, aU * dim, 8 * (1 - aU));
+      show(d.bot.g, aR * dim, 8 * (1 - aR));
+      const arrive = Tk.down + T.D_LENS * Tk.sp;
+      bar(d.bot, lin(t, arrive - 0.1, (T.D_READ + 0.1) * Tk.sp), d.bot.data.cells.map((c) => c[2]));
+      set(d.bot.tag, { "fill-opacity": seg(t, Tk.score, 0.3) });
+    });
+    ell.setAttribute("opacity", seg(t, T.ELL, 0.4) * dim);
+
+    const ns = D.seq.length - ND, m = ns * lin(t, T.STREAM, T.D_STREAM), km = Math.floor(m);
+    {
+      // the count chases the points like a critically damped spring: it eases in behind them and
+      // settles on the total without overshooting. f is the spring's response to the start of the
+      // stream, a ramp; the end of the stream is the same ramp, delayed and subtracted
+      const W = 12, k = ns / T.D_STREAM, s = t - T.STREAM;
+      const f = (u) => (u <= 0 ? 0 : k * (u - 2 / W + (2 / W + u) * Math.exp(-W * u)));
+      const n = Math.min(ns, Math.round(f(s) - f(s - T.D_STREAM)));
+      ellText.textContent = `⋮  ${n} more demonstration${n === 1 ? "" : "s"}`;
+    }
+    D.seq.forEach(([tg, x, y], i) => {
+      let r, a;
+      if (i < ND) {
+        const us = lin(t, T.turns[i].score, 0.3);
+        r = 9 * (1 + 0.5 * Math.sin(Math.PI * us));
+        a = clamp01(3 * us);
+      } else {
+        const j = i - ND, f = j < km ? 1 : j === km ? m - km : 0;
+        r = 9 * mix(0.3, 1, backOut(f));
+        a = clamp01(2 * f);
+      }
+      set(dots[i], { cx: x, cy: y, r: a > 0 ? r : 0, fill: LABEL[tg], opacity: a });
+    });
+
+    // while the instruction is cued, a halo on the responses labelled 0
+    const cnt = Math.floor(T.turns.reduce((s, Tk) => s + lin(t, Tk.score, 0.2), 0) + m + 1e-9);
+    const seen = D.seq.slice(0, cnt), g0 = seen.filter(([tg]) => tg === "0");
+    if (g0.length && g0.length < seen.length && t > CUE && t < T.PUSH) {
+      const uh = ((t - CUE) % 0.9) / 0.9;
+      const cx = g0.reduce((s, p) => s + p[1], 0) / g0.length, cy = g0.reduce((s, p) => s + p[2], 0) / g0.length;
+      set(halo, { cx, cy, r: 16 + 34 * uh, opacity: 1 - uh });
+    } else set(halo, { opacity: 0 });
+
+    // the final turn: when the instruction is added, the bubble widens and takes a tint of label
+    // 0's colour, and while it is cued its border pulses
+    const aC = seg(t, T.CRIT, 0.3), aF = seg(t, T.FORCED, 0.4), emph = seg(t, T.INSTR, 0.4);
+    show(fin.user.g, aC, 8 * (1 - aC));
+    show(fin.reply.g, aF, 8 * (1 - aF));
+    const pulse = t > CUE && t < T.PUSH ? 0.5 * (1 - Math.cos((2 * Math.PI * (t - CUE)) / 0.9)) : 0;
+    set(fin.user.rect, {
+      width: mix(USER_W, fin.user.wFull, seg(t, T.INSTR, 0.35)),
+      stroke: mixHex(FAINT, INK, emph),
+      "stroke-width": mix(1.6, 2.4, emph) + 2 * pulse,
+      fill: mixHex("#ffffff", "#f3faf5", emph),
+    });
+
+    // the forced reply, and its point moving with the activation edit
+    const uP = seg(t, T.PUSH, T.D_PUSH);
+    const pu = [P0[0] + MV[0] * uP, P0[1] + MV[1] * uP], pEnd = [P0[0] + MV[0], P0[1] + MV[1]];
+    const v = clamp01((score(P0) - score(pu)) / (score(P0) - score(P1)));
+    bar(fin.reply, lin(t, T.ARRIVE_F - 0.1, T.D_READ + 0.1), D.forced.cells.map((c, i) => mix(c[2], D.forced.cold[i], v)));
+    const uD = lin(t, T.DOT_F, 0.3);
+    set(ring, { opacity: uD > 0 ? 0.7 * seg(t, T.PUSH, 0.3) : 0 });
+    const dx = pu[0] - P0[0], dy = pu[1] - P0[1], dist = Math.hypot(dx, dy);
+    if (uD > 0 && dist > 30) {
+      const ux = dx / dist, uy = dy / dist;
+      const a = [P0[0] + 13 * ux, P0[1] + 13 * uy], b = [pu[0] - 14 * ux, pu[1] - 14 * uy];
+      const hb = [b[0] - 20 * ux, b[1] - 20 * uy];
+      set(shaft, { x1: a[0], y1: a[1], x2: hb[0] + 2 * ux, y2: hb[1] + 2 * uy });
+      set(head, { points: `${b[0]},${b[1]} ${hb[0] - 9 * uy},${hb[1] + 9 * ux} ${hb[0] + 9 * uy},${hb[1] - 9 * ux}` });
+      arrow.setAttribute("opacity", 1);
+    } else arrow.setAttribute("opacity", 0);
+    if (GUIDE && uD > 0) {
+      set(guide, { x1: P0[0], y1: P0[1], x2: P0[0] + GUIDE[0], y2: P0[1] + GUIDE[1], opacity: 0.75 * seg(t, T.PUSH + 0.6, 0.5) });
+    } else set(guide, { opacity: 0 });
+    set(fdot, {
+      cx: pu[0], cy: pu[1],
+      r: uD > 0 ? 12 * (1 + 0.4 * Math.sin(Math.PI * uD)) : 0,
+      fill: rgb(mixArr(hex("#9aa5b1"), cmap(score(pu)), seg(t, T.DOT_F + 0.2, 0.4))),
+      opacity: clamp01(3 * uD),
+    });
+
+    const lines = {
+      base: ["aimed the right way,", "but too small"],
+      amp: ["activation edit", "evades monitor"],
+      org: ["activation edit", "strongly evades", "monitor"],
+    }[opts.model];
+    const below = pEnd[1] > D.by + 10;
+    // below the boundary the label goes to the right of the end point, clear of the responses
+    const hw = Math.max(...lines.map((s) => textW(s, FS_L, 700))) / 2;
+    const ax = below ? Math.min(pEnd[0] + 22 + hw, X1 - 12 - hw) : 890, ay = below ? pEnd[1] + 40 : 280;
+    annL.forEach((a, i) => {
+      a.textContent = lines[i] || "";
+      set(a, { x: ax });
+    });
+    set(ann, { y: ay, opacity: uD > 0 ? seg(t, T.PUSH + 1.1, 0.4) : 0 });
+
+    const verdict = score(pEnd) > 0.5 ? "1" : "0", uV = lin(t, T.VERDICT, 0.3);
+    const vx = verdict === "0" ? X1 - 14 - wNot - 12 - 18 : X0 + 14 + wFlag + 12 + 18;
+    const vy = verdict === "0" ? Y1 - 22 : Y0 + 22;
+    chipRect.setAttribute("fill", LABEL[verdict]);
+    chipTxt.textContent = verdict;
+    set(chip, { transform: `translate(${vx} ${vy}) scale(${Math.max(0.001, backOut(uV))})`, opacity: clamp01(3 * uV) });
+    set(chipLbl, {
+      x: verdict === "0" ? vx - 30 : vx + 30, y: vy,
+      "text-anchor": verdict === "0" ? "end" : "start", opacity: clamp01(3 * uV),
+    });
+
+    for (const st of streams) st.rects.forEach((r, i) => r.setAttribute("fill-opacity", seg(t, st.times[i], TOK_FADE)));
+    {
+      const p = fin.user.pop, u = lin(t, p.start, 0.5);
+      const s = u < 0.35 ? 1.8 * (1 - (1 - u / 0.35) ** 2) : mix(1.8, 1, ease((u - 0.35) / 0.65));
+      set(p.e, { transform: `translate(${p.x} ${p.y}) scale(${Math.max(s, 0.001)}) translate(${-p.x} ${-p.y})`, opacity: clamp01(4 * u) });
+      set(p.e, { x: p.x });
+    }
+
+    const [lp, ls] = lensState(t);
+    set(lens, { x: lp[0] - ls / 2, y: lp[1] - ls / 2, width: ls, height: ls });
+  }
+
+  // ---------------------------------------------------------------- playback
+  const scrub = document.getElementById("scrub"), playBtn = document.getElementById("play");
+  const playIcon = document.getElementById("playIcon");
+  const PLAY = "M7 4.5v15l12.5-7.5z", PAUSE = "M6 4.5h4.5v15H6zM13.5 4.5H18v15h-4.5z";
+  let clock = END, playing = false, last = null, started = false;
+  function render() {
+    draw(toT(clock));
+    scrub.value = Math.round((clock / END) * 1000);
+  }
+  function tick(ts) {
+    if (!playing) return;
+    if (last !== null) clock = Math.min(END, clock + (ts - last) / 1000);
+    last = ts;
+    render();
+    if (clock >= END) setPlaying(false);
+    else requestAnimationFrame(tick);
+  }
+  function setPlaying(p) {
+    if (p && clock >= END) clock = 0;
+    const was = playing;
+    playing = p;
+    started = started || p;
+    playIcon.setAttribute("d", p ? PAUSE : PLAY);
+    playBtn.setAttribute("aria-label", p ? "Pause" : "Play");
+    if (p && !was) {
+      last = null;
+      requestAnimationFrame(tick);
+    }
+  }
+  playBtn.addEventListener("click", () => setPlaying(!playing));
+  document.getElementById("replay").addEventListener("click", () => {
+    clock = 0;
+    setPlaying(true);
+  });
+  scrub.addEventListener("input", () => {
+    setPlaying(false);
+    clock = (scrub.value / 1000) * END;
+    render();
+  });
+
+  function syncButtons() {
+    document.querySelectorAll(".seg").forEach((s) =>
+      s.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(opts[s.dataset.key] === b.dataset.v))));
+  }
+  document.querySelectorAll(".seg").forEach((s) =>
+    s.querySelectorAll("button").forEach((b) =>
+      b.addEventListener("click", () => {
+        opts[s.dataset.key] = b.dataset.v;
+        syncButtons();
+        updateMove();
+        // replay the final turn under the new setting
+        const t0 = toClock(T.INSTR - 0.2);
+        if (clock > t0) {
+          clock = t0;
+          setPlaying(true);
+        } else render();
+      })));
+
+  // ---------------------------------------------------------------- start
+  syncButtons();
+  updateMove();
+  layout();
+  measure();
+  render(); // the finished picture until the episode scrolls into view
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { measure(); render(); postHeight(); });
+  // an embedding page can fit its frame to the widget: the widget posts its height to the parent
+  // whenever that changes
+  let sentH = 0;
+  function postHeight() {
+    const h = Math.ceil(document.body.getBoundingClientRect().height) + 4;
+    if (h > 4 && h !== sentH && window.parent !== window) {
+      sentH = h;
+      window.parent.postMessage({ type: "episode-widget-height", height: h }, "*");
+    }
+  }
+  postHeight();
+  // the frame can be shown or resized after load, without a resize event
+  const relayout = () => { layout(); render(); postHeight(); };
+  window.addEventListener("resize", relayout);
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(() => requestAnimationFrame(relayout)).observe(document.documentElement);
+  }
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver((es) => {
+        if (es.some((e) => e.isIntersecting) && !started) {
+          io.disconnect();
+          setPlaying(true);
+        }
+      }, { threshold: 0.35 });
+      io.observe(svg);
+    } else setPlaying(true);
+  }
+})();
+</script>
+</body>
+</html>
