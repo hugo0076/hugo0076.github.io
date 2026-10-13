@@ -62,8 +62,6 @@
     padding: 0.35rem 0.95rem;
   }
   .links a:hover { border-color: var(--fg); }
-  .links a[aria-disabled="true"] { color: var(--muted); cursor: default; }
-  .links a[aria-disabled="true"]:hover { border-color: var(--line); }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   figure { margin: 0; display: grid; gap: 0.6rem; }
@@ -131,7 +129,8 @@
     <p class="authors"><span><strong><a href="../">Hugo Lyons Keenan</a></strong>, <strong>Christopher Leckie</strong>, <strong>Sarah Erfani</strong></span><span>The University of Melbourne</span></p>
     <nav class="links" aria-label="Paper links">
       <a href="https://arxiv.org/abs/2609.36490" id="link-paper">Paper</a>
-      <a id="link-code" aria-disabled="true">Code (coming soon)</a>
+      <a href="https://github.com/hugo0076/latent-monitor-evasion" id="link-code">Code</a>
+      <a href="https://huggingface.co/hugo0076/latent-monitor-evasion" id="link-models">Models</a>
       <a href="#citation">BibTeX</a>
     </nav>
   </header>
