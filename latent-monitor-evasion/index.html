@@ -39,6 +39,11 @@
     padding-block: 0;
     margin: 0;
   }
+  .back {
+    position: absolute; top: 16px; left: 20px;
+    font-family: var(--mono); font-size: 0.85rem; color: var(--muted); text-decoration: none;
+  }
+  .back:hover { color: var(--fg); text-decoration: underline; text-underline-offset: 3px; }
   .page { max-width: 46rem; margin-inline: auto; padding-block: 3.5rem 4rem; display: grid; gap: 3rem; }
 
   header { display: grid; gap: 1rem; justify-items: center; text-align: center; }
@@ -118,11 +123,12 @@
 
   @media (max-width: 30rem) {
     body { font-size: 1rem; }
-    .page { padding-block: 2rem 3rem; gap: 2.25rem; }
+    .page { padding-block: 3.25rem 3rem; gap: 2.25rem; }
   }
 </style>
 </head>
 <body>
+<a class="back" href="../">&larr; Back</a>
 <div class="page">
   <header>
     <h1>LLMs Learn to Evade Latent Monitors from Prior Feedback Alone</h1>
